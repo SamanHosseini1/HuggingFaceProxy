@@ -1,16 +1,19 @@
 export default {
   async fetch(request) {
-    // مسیر کامل مقصد در هاگینگ‌فیس
-    const targetUrl = "https://api-inference.huggingface.co/models/philschmid/stable-diffusion-2-inpainting-endpoint";
+    const targetBase = "https://api-inference.huggingface.co/models/philschmid/stable-diffusion-2-inpainting-endpoint";
 
-    // کپی هدرها و بازنویسی هدر Host
-    const headers = new Headers(request.headers);
-    headers.set("Host", "api-inference.huggingface.co");
+    // ساخت یک آبجکت هدر جدید بدون دستکاری Host
+    const newHeaders = new Headers();
+    for (const [key, value] of request.headers.entries()) {
+      // حذف هدرهایی که باعث اختلال در پراکسی داخلی کلودفلر می‌شوند
+      if (!["host", "cf-connecting-ip", "cf-ray", "cf-visitor"].includes(key.toLowerCase())) {
+        newHeaders.set(key, value);
+      }
+    }
 
-    // ساخت درخواست جدید برای ارسال به هاگینگ‌فیس
-    const modifiedRequest = new Request(targetUrl, {
+    const modifiedRequest = new Request(targetBase, {
       method: request.method,
-      headers: headers,
+      headers: newHeaders,
       body: request.body,
       redirect: "follow"
     });
